@@ -6,6 +6,7 @@
 #=================================================
 
 name: Build_JETSON_NANO_4G
+#修改项目名称
 
 # Add a button to trigger the workflow
 on: 
@@ -24,7 +25,8 @@ jobs:
         fetch-depth: 0
         lfs: true
 
-    - name: Initialization environment  # 清理环境，安装必要的构建工具
+    - name: Initialization environment  
+      # 清理环境，安装必要的构建工具
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -55,7 +57,9 @@ jobs:
     - name: Clone source code
       env: 
         REPO_URL: https://git.openwrt.org/openwrt/staging/xback.git
+        # 修改项目地址
         REPO_BRANCH: master
+        # 分支为master，也可以是其他分支
       run: |
         git clone --depth 1 -b $REPO_BRANCH $REPO_URL openwrt
         cd openwrt
@@ -68,31 +72,30 @@ jobs:
         ./scripts/feeds install -a
         ./scripts/feeds install -a
         
-    #- name: Import external feeds - passwall
+    #- name: Import external feeds - passwall   #配置git账户名和路径
     #  working-directory: ./openwrt
     #  run: |
     #    git clone https://github.com/xiaorouji/openwrt-passwall.git package/lienol
     #    git clone "your_github_link" package/"your_folder_name"      
 
-    #- name: Import external feeds - JerryKuKu Argon
+    #- name: Import external feeds - JerryKuKu Argon    # 用于添加插件，JerryKuKu Argon是主题插件
     #  working-directory: ./openwrt
     #  run: |
     #    git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon-jerrykuku
 
     - name: Configuration Customization - Build_JETSON_NANO_4G
       env:
-        CONFIG_FILE: 'JETSON_NANO_4G.config'
+        CONFIG_FILE: 'JETSON_NANO_4G.config'      
+        #修改配置文件，文件需位于主目录下
       run: |
        # 检查并报告配置文件的状态
         if [ -e "$CONFIG_FILE" ]; then
           mv "$CONFIG_FILE" openwrt/.config
+          echo "文件 $CONFIG_FILE 存在."
         else
-          echo "Configuration file $CONFIG_FILE does not exist."
+          echo "文件 $CONFIG_FILE 不存在."
         fi
         cd openwrt && make defconfig
-    # 假设不需要修改zzz-default-settings，或者已确认其位置正确
-    # 若需修改其他文件，请确保路径正确
-    # sed -i 'your command here' path/to/correct/file    
 #        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
 #        chmod +x ./customize.sh && ./customize.sh
 #        cd openwrt && make defconfig
