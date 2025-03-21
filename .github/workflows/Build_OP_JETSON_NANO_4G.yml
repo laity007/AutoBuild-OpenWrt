@@ -108,9 +108,12 @@ jobs:
       working-directory: ./openwrt
       run: |
         echo -e "$(nproc) thread build."
-        make -j$(nproc) > build.log 2>&1 || tail -n 100 build.log
+        make -j$(nproc) 2> error.log    
+      # 只记录错误日志
+      # make -j$(nproc) > build.log 2>&1 || tail -n 100 build.log
+      # 只保存最后一百条日志
       # make -j$(nproc) V=s
-      # make -j$(nproc) V=s
+      # 保存日志并显示
     - name : Upload artifact
       uses: actions/upload-artifact@master
       with:
