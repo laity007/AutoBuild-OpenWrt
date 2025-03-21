@@ -6,7 +6,7 @@
 # <https://github.com/KFERMercer/OpenWrt-CI>
 #
 
-name: Sync Code from eSir Autobuild Script
+name: Project_Name #edit your project name
 
 # Add a button to trigger the workflow - Kuroko
 on: 
@@ -21,13 +21,10 @@ on:
 #    - cron: 0 19 * * *
 
 jobs:
-
   merge:
-
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # choice system version
 
     steps:
-
     - name: Checkout
       uses: actions/checkout@v2
       with:
@@ -35,12 +32,14 @@ jobs:
         fetch-depth: 0
         lfs: true
 
-    - name: Syncing Preparation
+    - name: Syncing Preparation    
+    # edit your git,you can also comment out this paragraph
       run : |
         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git config --global user.name "github-actions[bot]"
         
-    - name: Start Syncing Autobuild Most Updated Changes
+    - name: Start Syncing Autobuild Most Updated Changes    
+    # edit your plug-in,you can also comment out this paragraph
       run: git pull https://github.com/esirplayground/AutoBuild-OpenWrt.git --log --no-commit
 
     - name: Download All New Changes
