@@ -79,7 +79,7 @@ jobs:
     #  run: |
     #    git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon-jerrykuku
 
-    - name: Configuration Customization - Build_NanoPi_R2S
+    - name: Configuration Customization - Build_JETSON_NANO_4G
       env:
         CONFIG_FILE: 'JETSON_NANO_4G.config'
       run: |
