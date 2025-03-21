@@ -1,12 +1,10 @@
 #=================================================
 # Description: Build OpenWrt using GitHub Actions
-# Lisence: MIT
 # Author: laity
-# Youtube Channel: https://goo.gl/fvkdwm 
 #=================================================
 
 name: Build_JETSON_NANO_4G
-#修改项目名称
+# 修改项目名称
 
 # Add a button to trigger the workflow
 on: 
@@ -86,7 +84,7 @@ jobs:
     - name: Configuration Customization - Build_JETSON_NANO_4G
       env:
         CONFIG_FILE: 'JETSON_NANO_4G.config'      
-        #修改配置文件，文件需位于主目录下
+        # 修改配置文件，文件需位于主目录下
       run: |
        # 检查并报告配置文件的状态
         if [ -e "$CONFIG_FILE" ]; then
