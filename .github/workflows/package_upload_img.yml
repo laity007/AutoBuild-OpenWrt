@@ -1,0 +1,142 @@
+#=================================================
+# Description: Build OpenWrt using GitHub Actions
+# Author: laity
+#=================================================
+
+name: Build_JETSON_NANO_4G
+# 修改项目名称
+
+# Add a button to trigger the workflow
+on: 
+  repository_dispatch:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+      with:
+        ref: master
+        fetch-depth: 0
+        lfs: true
+
+    - name: Initialization environment  
+      # 清理环境，安装必要的构建工具
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        set +e
+        docker rmi `docker images -q`
+        echo "Deleting files, please wait ..."
+        sudo rm -rf \
+          /usr/share/dotnet \
+          /etc/mysql \
+          /etc/php
+        sudo -E apt-get -y purge \
+          azure-cli \
+          ghc* \
+          zulu* \
+          hhvm \
+          llvm* \
+          firefox \
+          google* \
+          dotnet* \
+          powershell \
+          openjdk* \
+          mysql* \
+          php*
+        sudo -E apt-get update
+        sudo -E apt-get -y install ack antlr3 aria2 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pip libpython3-dev qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+        sudo -E apt-get -y autoremove --purge
+        sudo -E apt-get clean
+
+    - name: Clone source code
+      env: 
+        REPO_URL: https://git.openwrt.org/openwrt/staging/xback.git
+        # 修改项目地址
+        REPO_BRANCH: master
+        # 分支为master，也可以是其他分支
+      run: |
+        git clone --depth 1 -b $REPO_BRANCH $REPO_URL openwrt
+        cd openwrt
+        echo "src-git ssrp https://github.com/fw876/helloworld.git" >> ./feeds.conf.default
+
+    - name: Update & Install feeds
+      working-directory: ./openwrt
+      run: |
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+
+    - name: Configuration Customization - Build_JETSON_NANO_4G
+      env:
+        CONFIG_FILE: 'JETSON_NANO_4G.config'      
+        # 修改配置文件，文件需位于主目录下
+      run: |
+        # 检查并报告配置文件的状态
+        if [ -e "$CONFIG_FILE" ]; then
+          mv "$CONFIG_FILE" openwrt/.config
+          echo "文件 $CONFIG_FILE 存在."
+        else
+          echo "文件 $CONFIG_FILE 不存在."
+        fi
+        cd openwrt && make defconfig
+
+    - name: Download package
+      working-directory: ./openwrt
+      run: |
+        make download -j$(nproc)
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+
+    - name: Build firmware
+      working-directory: ./openwrt
+      run: |
+        echo -e "$(nproc) thread build."
+        (make -j$(nproc) > /dev/null 2>&1) &  
+        while ps aux | grep -q "[m]ake -j"; do  
+            echo "===== $(date) ====="  
+            free -h  
+            uptime 
+            sleep 600   
+        done
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@master
+      with:
+        name: OpenWrt
+        path: openwrt/bin
+
+    - name: Upload OpenWrt to Release
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ github.sha }}
+        artifacts: openwrt/bin/targets/*
+        body: |
+          **Build Information:**
+          - Commit: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
+          - Branch: [${{ github.ref_name }}](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }})
+          - Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+    - name: Packaging OpenWrt
+      working-directory: ./openwrt
+      run: |
+        # 这里假设你有一个脚本或命令来打包OpenWrt固件
+        # 例如，使用某个工具或自定义脚本进行打包
+        # 请根据实际情况替换以下命令
+        echo "Packaging OpenWrt..."
+        # 示例命令（假设存在一个名为package_openwrt.sh的脚本）
+        ./package_openwrt.sh
+
+    - name: Upload packaged OpenWrt to Release
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ github.sha }}
+        artifacts: openwrt/packaged/*
+        body: |
+          **Packaged Build Information:**
+          - Commit: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
+          - Branch: [${{ github.ref_name }}](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }})
+          - Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
