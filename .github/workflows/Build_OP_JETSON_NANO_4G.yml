@@ -108,7 +108,15 @@ jobs:
       working-directory: ./openwrt
       run: |
         echo -e "$(nproc) thread build."
-        make -j$(nproc) 2> error.log    
+        (make -j$(nproc) > /dev/null 2>&1) &  
+        while ps aux | grep -q "[m]ake -j"; do  
+            echo "===== $(date) ====="  
+            free -h  
+            uptime 
+            sleep 600   
+        done
+      #编译并不打印也不保存日志，每10分钟打印一下系统内容
+      # make -j$(nproc) 2> error.log    
       # 只记录错误日志
       # make -j$(nproc) > build.log 2>&1 || tail -n 100 build.log
       # 只保存最后一百条日志
