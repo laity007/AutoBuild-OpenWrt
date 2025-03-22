@@ -104,7 +104,7 @@ jobs:
         done
 
     - name: Upload artifact
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@v3
       with:
         name: OpenWrt
         path: openwrt/bin
@@ -120,21 +120,23 @@ jobs:
           - Branch: [${{ github.ref_name }}](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }})
           - Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
-    - name: Packaging OpenWrt
+    - name: Package OpenWrt
       working-directory: ./openwrt
       run: |
-        # 这里假设你有一个脚本或命令来打包OpenWrt固件
-        # 例如，使用某个工具或自定义脚本进行打包
-        # 请根据实际情况替换以下命令
         echo "Packaging OpenWrt..."
-        # 示例命令（假设存在一个名为package_openwrt.sh的脚本）
-        ./package_openwrt.sh
+        # 创建一个临时目录来存放打包文件
+        mkdir -p /tmp/openwrt-package
+        # 将bin目录及其内容复制到临时目录
+        cp -r bin /tmp/openwrt-package/
+        # 打包bin目录为zip文件
+        cd /tmp/openwrt-package
+        zip -r openwrt-bin.zip bin
 
     - name: Upload packaged OpenWrt to Release
       uses: ncipollo/release-action@v1
       with:
         tag: ${{ github.sha }}
-        artifacts: openwrt/packaged/*
+        artifacts: /tmp/openwrt-package/openwrt-bin.zip
         body: |
           **Packaged Build Information:**
           - Commit: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
