@@ -127,3 +127,37 @@ jobs:
       with:
         name: OpenWrt
         path: openwrt/bin
+
+    - name: Upload OpenWrt to Release
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ github.sha }}
+        artifacts: openwrt/bin/targets/*
+        body: |
+          **Build Information:**
+          - Commit: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
+          - Branch: [${{ github.ref_name }}](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }})
+          - Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+    - name: Package OpenWrt
+      working-directory: ./openwrt
+      run: |
+        echo "Packaging OpenWrt..."
+        # 创建一个临时目录来存放打包文件
+        mkdir -p /tmp/openwrt-package
+        # 将bin目录及其内容复制到临时目录
+        cp -r bin /tmp/openwrt-package/
+        # 打包bin目录为zip文件
+        cd /tmp/openwrt-package
+        zip -r openwrt-bin.zip bin
+
+    - name: Upload packaged OpenWrt to Release
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ github.sha }}
+        artifacts: /tmp/openwrt-package/openwrt-bin.zip
+        body: |
+          **Packaged Build Information:**
+          - Commit: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
+          - Branch: [${{ github.ref_name }}](${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }})
+          - Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
