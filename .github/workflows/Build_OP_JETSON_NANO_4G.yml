@@ -113,7 +113,7 @@ jobs:
             echo "===== $(date) ====="  
             free -h  
             uptime 
-            sleep 600   
+            sleep 120   
         done
       #编译并不打印也不保存日志，每10分钟打印一下系统内容
       # make -j$(nproc) 2> error.log    
